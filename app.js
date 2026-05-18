@@ -4,6 +4,8 @@ let chainModeEnabled = false;
 let currentChain = [];
 let currentSubcommandParent = null; // null if at root
 let parameterMode = null; // null or reference to command object requiring parameter
+let isModalOpen = false;
+let commandBeingEdited = null;
 
 // DOM Elements
 const searchInput = document.getElementById('search-input');
@@ -18,6 +20,15 @@ const pillText = document.getElementById('pill-text');
 const breadcrumbsContainer = document.getElementById('breadcrumbs-container');
 const bcRoot = document.getElementById('bc-root');
 const bcCurrent = document.getElementById('bc-current');
+const settingsModal = document.getElementById('settings-modal');
+const closeModalBtn = document.getElementById('close-modal-btn');
+const saveCommandBtn = document.getElementById('save-command-btn');
+const editTitle = document.getElementById('edit-title');
+const editAliases = document.getElementById('edit-aliases');
+const editShortcut = document.getElementById('edit-shortcut');
+const saveMacroBtn = document.getElementById('save-macro-btn');
+const editMacroStepsBtn = document.getElementById('edit-macro-steps-btn');
+const deleteMacroBtn = document.getElementById('delete-macro-btn');
 
 // Initialize Lucide Icons
 lucide.createIcons();
@@ -38,6 +49,15 @@ chainToggle.addEventListener('change', (e) => {
     searchInput.focus();
 });
 bcRoot.addEventListener('click', goBackToRoot);
+closeModalBtn.addEventListener('click', closeSettingsModal);
+saveCommandBtn.addEventListener('click', saveCommandSettings);
+saveMacroBtn.addEventListener('click', saveChainAsMacro);
+editMacroStepsBtn.addEventListener('click', () => {
+    if (commandBeingEdited) editMacro(commandBeingEdited.id);
+});
+deleteMacroBtn.addEventListener('click', () => {
+    if (commandBeingEdited) deleteMacro(commandBeingEdited.id);
+});
 
 function handleSearch(e) {
     const query = e.target.value.toLowerCase();
@@ -64,6 +84,21 @@ function handleSearch(e) {
 }
 
 function handleKeyDown(e) {
+    if (isModalOpen) {
+        if (e.key === 'Escape') {
+            closeSettingsModal();
+        } else if (e.key === 'Enter') {
+            saveCommandSettings();
+        }
+        return;
+    }
+    
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'e') {
+        e.preventDefault();
+        openSettingsModal();
+        return;
+    }
+
     if (e.key === 'ArrowDown') {
         e.preventDefault();
         selectedIndex = Math.min(selectedIndex + 1, currentCommands.length - 1);
@@ -178,9 +213,109 @@ function exitParameterMode() {
     handleSearch({ target: searchInput });
 }
 
+function openSettingsModal() {
+    if (parameterMode) return;
+    const cmd = currentCommands[selectedIndex];
+    if (!cmd) return;
+    
+    commandBeingEdited = cmd;
+    editTitle.value = cmd.title || '';
+    editAliases.value = cmd.aliases ? cmd.aliases.join(', ') : '';
+    editShortcut.value = cmd.shortcut || '';
+    
+    if (cmd.isMacro) {
+        editMacroStepsBtn.classList.remove('hidden');
+        deleteMacroBtn.classList.remove('hidden');
+    } else {
+        editMacroStepsBtn.classList.add('hidden');
+        deleteMacroBtn.classList.add('hidden');
+    }
+    
+    settingsModal.classList.remove('hidden');
+    isModalOpen = true;
+    editTitle.focus();
+}
+
+function closeSettingsModal() {
+    settingsModal.classList.add('hidden');
+    isModalOpen = false;
+    commandBeingEdited = null;
+    searchInput.focus();
+}
+
+function saveCommandSettings() {
+    if (!commandBeingEdited) return;
+    
+    commandBeingEdited.title = editTitle.value.trim();
+    const aliasesRaw = editAliases.value.trim();
+    commandBeingEdited.aliases = aliasesRaw ? aliasesRaw.split(',').map(s => s.trim()) : [];
+    commandBeingEdited.shortcut = editShortcut.value.trim();
+    
+    closeSettingsModal();
+    renderList();
+}
+
+function saveChainAsMacro() {
+    if (currentChain.length === 0) return;
+    const macroName = prompt("Enter a name for this macro:", "New Macro");
+    if (!macroName) return;
+    
+    const newMacro = {
+        id: 'macro-' + Date.now(),
+        title: macroName,
+        category: 'Macros',
+        aliases: [],
+        shortcut: '',
+        icon: 'layers',
+        isMacro: true,
+        type: 'Macro',
+        steps: [...currentChain]
+    };
+    
+    commandsData.push(newMacro);
+    
+    currentChain = [];
+    chainToggle.checked = false;
+    chainModeEnabled = false;
+    updateChainUI();
+    
+    if (!currentSubcommandParent && searchInput.value === '') {
+        currentCommands = [...commandsData];
+        renderList();
+    } else {
+        handleSearch({ target: searchInput });
+    }
+    
+    searchInput.focus();
+}
+
 function addToChain(title, iconName) {
     currentChain.push({ title, icon: iconName });
     updateChainUI();
+}
+
+function deleteMacro(id) {
+    const index = commandsData.findIndex(c => c.id === id);
+    if (index > -1) {
+        commandsData.splice(index, 1);
+        handleSearch({ target: searchInput });
+        closeSettingsModal();
+    }
+}
+
+function editMacro(id) {
+    const index = commandsData.findIndex(c => c.id === id);
+    if (index > -1) {
+        const macro = commandsData[index];
+        commandsData.splice(index, 1);
+        currentChain = [...macro.steps];
+        chainModeEnabled = true;
+        chainToggle.checked = true;
+        updateChainUI();
+        searchInput.value = '';
+        handleSearch({ target: searchInput });
+        closeSettingsModal();
+    }
 }
 
 function updateChainUI() {
@@ -283,11 +418,11 @@ function createSuggestionElement(cmd, index) {
         </div>
         <div class="item-content">
             <span class="item-title">${cmd.title}</span>
-            ${cmd.aliases ? `<span class="item-subtitle">${cmd.aliases.join(', ')}</span>` : ''}
+            ${cmd.aliases && cmd.aliases.length > 0 ? `<span class="item-subtitle">${cmd.aliases.join(', ')}</span>` : ''}
         </div>
         <div class="item-right">
-            <span class="item-action-type">${cmd.type || 'Command'}</span>
             ${shortcutHTML}
+            <span class="item-action-type">${cmd.type || 'Command'}</span>
         </div>
     `;
     return el;

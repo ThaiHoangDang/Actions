@@ -4,7 +4,7 @@ const commandsData = [
         title: 'New Tab', 
         category: 'Browser', 
         aliases: ['open tab', 'create tab'], 
-        shortcut: '⌘ T', 
+        shortcut: 'Ctrl T', 
         icon: 'plus',
         type: 'Command'
     },
@@ -13,7 +13,7 @@ const commandsData = [
         title: 'Close Tab', 
         category: 'Browser', 
         aliases: ['kill tab', 'exit tab'], 
-        shortcut: '⌘ W', 
+        shortcut: 'Ctrl W', 
         icon: 'x',
         type: 'Command'
     },
@@ -22,7 +22,7 @@ const commandsData = [
         title: 'History', 
         category: 'Browser', 
         aliases: ['recent', 'past'], 
-        shortcut: '⌘ Y', 
+        shortcut: 'Ctrl Y', 
         icon: 'clock',
         type: 'Command'
     },
@@ -31,7 +31,7 @@ const commandsData = [
         title: 'Incognito Mode', 
         category: 'Browser', 
         aliases: ['private', 'secret'], 
-        shortcut: '⇧ ⌘ N', 
+        shortcut: 'Ctrl Shift N', 
         icon: 'ghost',
         type: 'Command'
     },
@@ -98,7 +98,7 @@ const commandsData = [
         title: 'Ask AI', 
         category: 'Cốc Cốc Features', 
         aliases: ['ai', 'chat', 'sidebar'], 
-        shortcut: '⌘ /', 
+        shortcut: 'Ctrl /', 
         icon: 'sparkles',
         requiresParameter: true,
         placeholder: 'Ask AI anything...',
@@ -112,6 +112,11 @@ const commandsData = [
         shortcut: '', 
         icon: 'sun', 
         isMacro: true,
-        type: 'Macro'
+        type: 'Macro',
+        steps: [
+            { title: 'New Tab', icon: 'plus' },
+            { title: 'Gmail Compose', icon: 'mail' },
+            { title: 'YouTube', icon: 'youtube' }
+        ]
     }
 ];

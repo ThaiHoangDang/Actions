@@ -16,9 +16,14 @@
             
             <!-- Chain Mode Header (Hidden by default) -->
             <div id="chain-header" class="hidden">
-                <div class="chain-track" id="chain-track">
-                    <!-- Action blocks inserted here -->
+                <div class="chain-track-container">
+                    <div class="chain-track" id="chain-track">
+                        <!-- Action blocks inserted here -->
+                    </div>
                 </div>
+                <button id="save-macro-btn" class="icon-btn" title="Save as Macro">
+                    <i data-lucide="save"></i>
+                </button>
             </div>
 
             <!-- Top input area -->
@@ -64,8 +69,40 @@
                     </div>
                 </div>
                 <div class="footer-right">
+                    <span class="hint"><kbd>Ctrl</kbd> <kbd>E</kbd> to edit</span>
                     <span class="hint">↵ to submit</span>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Command</h3>
+                <button id="close-modal-btn" class="icon-btn"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="edit-title">Title</label>
+                    <input type="text" id="edit-title" />
+                </div>
+                <div class="form-group">
+                    <label for="edit-aliases">Aliases (comma separated)</label>
+                    <input type="text" id="edit-aliases" />
+                </div>
+                <div class="form-group">
+                    <label for="edit-shortcut">Shortcut</label>
+                    <input type="text" id="edit-shortcut" placeholder="e.g. Ctrl T" />
+                </div>
+            </div>
+            <div class="modal-footer" id="modal-footer">
+                <div class="footer-left-actions">
+                    <button id="edit-macro-steps-btn" class="secondary-btn hidden">Edit Steps</button>
+                    <button id="delete-macro-btn" class="danger-btn hidden">Delete</button>
+                </div>
+                <button id="save-command-btn" class="primary-btn">Save</button>
             </div>
         </div>
     </div>
