@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cốc Cốc Actions</title>
+    <link rel="stylesheet" href="index.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <!-- The backdrop overlay -->
+    <div id="backdrop">
+        <!-- Floating launcher container -->
+        <div id="launcher">
+            
+            <!-- Chain Mode Header (Hidden by default) -->
+            <div id="chain-header" class="hidden">
+                <div class="chain-track" id="chain-track">
+                    <!-- Action blocks inserted here -->
+                </div>
+            </div>
+
+            <!-- Top input area -->
+            <div id="input-area">
+                <i data-lucide="search" class="search-icon" id="main-search-icon"></i>
+                <div id="parameter-pill" class="hidden">
+                    <span class="pill-icon-container">
+                        <i id="pill-icon" data-lucide="box" class="pill-icon"></i>
+                    </span>
+                    <span id="pill-text">Command</span>
+                </div>
+                <input type="text" id="search-input" placeholder="Search websites, browser features, settings, and more" autocomplete="off" spellcheck="false" />
+                <button id="mic-btn" class="icon-btn" title="Voice Input">
+                    <i data-lucide="mic"></i>
+                </button>
+            </div>
+
+            <!-- Breadcrumbs for subcommands -->
+            <div id="breadcrumbs-container" class="hidden">
+                <div id="breadcrumbs">
+                    <span id="bc-root" class="bc-item">Root</span>
+                    <i data-lucide="chevron-right" class="bc-sep"></i>
+                    <span id="bc-current" class="bc-item active">Current</span>
+                </div>
+            </div>
+
+            <!-- Suggestion list -->
+            <div id="suggestion-list-container">
+                <div id="suggestion-list">
+                    <!-- dynamically generated -->
+                </div>
+            </div>
+
+            <!-- Footer area -->
+            <div id="footer">
+                <div class="footer-left">
+                    <div class="chain-toggle">
+                        <label class="switch">
+                          <input type="checkbox" id="chain-mode-toggle">
+                          <span class="slider round"></span>
+                        </label>
+                        <span>Chain mode</span>
+                    </div>
+                </div>
+                <div class="footer-right">
+                    <span class="hint">↵ to submit</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
