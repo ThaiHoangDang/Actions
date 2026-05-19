@@ -2,17 +2,18 @@ const commandsData = [
     {
         id: 'web-search',
         title: 'Web Search',
+        description: 'Tìm kiếm web hoặc url',
         category: 'Browser',
         aliases: ['google', 'search', 'query'],
         shortcut: '',
         icon: 'search',
-        requiresParameter: true,
-        placeholder: 'Search the web...',
+        parameters: [{ id: 'query', placeholder: 'Search the web...' }],
         type: 'Command'
     },
     {
         id: 'new-tab',
         title: 'New Tab',
+        description: 'Mở tab mới',
         category: 'Browser',
         aliases: ['open tab', 'create tab', 'mở tab mới'],
         shortcut: 'Ctrl T',
@@ -22,6 +23,7 @@ const commandsData = [
     {
         id: 'close-tab',
         title: 'Close Tab',
+        description: 'Đóng tab hiện tại',
         category: 'Browser',
         aliases: ['kill tab', 'exit tab', 'đóng tab'],
         shortcut: 'Ctrl W',
@@ -31,21 +33,23 @@ const commandsData = [
     {
         id: 'print-screen',
         title: 'Print Screen',
+        description: 'Chụp màn hình',
         category: 'Browser',
         aliases: ['chụp màn hình'],
         shortcut: '',
         icon: 'camera',
         hasSubcommands: true,
         subcommands: [
-            { id: 'print-screen-full', title: 'Print Screen Full', icon: 'camera' },
-            { id: 'print-screen-area', title: 'Print Screen Area', icon: 'camera' },
-            { id: 'print-screen-window', title: 'Print Screen Window', icon: 'camera' },
+            { id: 'print-screen-full', title: 'Chụp vùng chọn', description: 'Chọn vùng để chụp', icon: 'camera' },
+            { id: 'print-screen-area', title: 'Chụp phần hiển thị', description: 'Chụp phần trang web đang hiển thị', icon: 'camera' },
+            { id: 'print-screen-window', title: 'Chụp toàn bộ trang', description: 'Chụp từ trên xuống dưới', icon: 'camera' },
         ],
         type: 'Command'
     },
     {
         id: 'history',
         title: 'History',
+        description: 'Xem lịch sử duyệt web',
         category: 'Browser',
         aliases: ['recent', 'past'],
         shortcut: 'Ctrl Y',
@@ -55,6 +59,7 @@ const commandsData = [
     {
         id: 'incognito',
         title: 'Incognito Mode',
+        description: 'Mở cửa sổ ẩn danh',
         category: 'Browser',
         aliases: ['private', 'secret'],
         shortcut: 'Ctrl Shift N',
@@ -64,44 +69,50 @@ const commandsData = [
     {
         id: 'youtube',
         title: 'YouTube',
+        description: 'Các tính năng với Youtube',
         category: 'Apps',
         aliases: ['yt', 'video'],
         shortcut: '',
         icon: 'video',
         hasSubcommands: true,
         subcommands: [
-            { id: 'yt-search', title: 'YouTube Search', icon: 'search', requiresParameter: true, placeholder: 'Search YouTube...' },
-            { id: 'yt-trending', title: 'Trending Videos', icon: 'trending-up' },
-            { id: 'yt-profile', title: 'My Profile', icon: 'user' },
-            { id: 'yt-playlists', title: 'Playlists', icon: 'list-video' }
+            { id: 'yt-search', title: 'YouTube Search', description: 'Tìm kiếm video', icon: 'search', parameters: [{ id: 'query', placeholder: 'Search YouTube...' }] },
+            { id: 'yt-trending', title: 'Trending Videos', description: 'Xem video thịnh hành', icon: 'trending-up' },
+            { id: 'yt-profile', title: 'My Profile', description: 'Xem hồ sơ YouTube của bạn', icon: 'user' },
+            { id: 'yt-playlists', title: 'Playlists', description: 'Xem danh sách phát của bạn', icon: 'list-video' }
         ],
-        type: 'Command'
+        type: 'Application'
     },
     {
         id: 'gmail',
         title: 'Gmail Compose',
+        description: 'Soạn email mới trong Gmail',
         category: 'Apps',
         aliases: ['email', 'mail', 'send'],
         shortcut: '',
         icon: 'mail',
-        requiresParameter: true,
-        placeholder: 'To...',
-        type: 'App'
+        parameters: [
+            { id: 'to', placeholder: 'To...' },
+            { id: 'subject', placeholder: 'Subject...' },
+            { id: 'body', placeholder: 'Message...' }
+        ],
+        type: 'Application'
     },
     {
         id: 'shopee',
         title: 'Shopee Search',
+        description: 'Tìm kiếm sản phẩm trên Shopee',
         category: 'Apps',
         aliases: ['shop', 'buy'],
         shortcut: '',
         icon: 'shopping-bag',
-        requiresParameter: true,
-        placeholder: 'Search Shopee...',
-        type: 'App'
+        parameters: [{ id: 'query', placeholder: 'Search Shopee...' }],
+        type: 'Application'
     },
     {
         id: 'coccoc-points',
         title: 'Cốc Cốc Points',
+        description: 'Xem điểm Cốc Cốc của bạn',
         category: 'Cốc Cốc Features',
         aliases: ['points', 'rewards'],
         shortcut: '',
@@ -111,17 +122,18 @@ const commandsData = [
     {
         id: 'ask-ai',
         title: 'Ask AI',
+        description: 'Hỏi trợ lý AI của Cốc Cốc',
         category: 'Cốc Cốc Features',
         aliases: ['ai', 'chat', 'sidebar'],
         shortcut: 'Ctrl /',
         icon: 'sparkles',
-        requiresParameter: true,
-        placeholder: 'Ask AI anything...',
+        parameters: [{ id: 'query', placeholder: 'Ask AI anything...' }],
         type: 'Command'
     },
     {
         id: 'macro-morning',
         title: 'Morning Setup',
+        description: 'Mở một chuỗi lệnh buổi sáng',
         category: 'Macros',
         aliases: ['start', 'morning', 'work'],
         shortcut: '',

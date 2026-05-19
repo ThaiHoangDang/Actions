@@ -4,8 +4,11 @@ let chainModeEnabled = false;
 let currentChain = [];
 let currentSubcommandParent = null; // null if at root
 let parameterMode = null; // null or reference to command object requiring parameter
+let currentParameterIndex = 0;
+let collectedParameters = [];
 let isModalOpen = false;
 let commandBeingEdited = null;
+let chainItemBeingEditedIndex = -1;
 
 // DOM Elements
 const searchInput = document.getElementById('search-input');
@@ -13,10 +16,8 @@ const suggestionList = document.getElementById('suggestion-list');
 const chainToggle = document.getElementById('chain-mode-toggle');
 const chainHeader = document.getElementById('chain-header');
 const chainTrack = document.getElementById('chain-track');
-const parameterPill = document.getElementById('parameter-pill');
+const parameterPillsContainer = document.getElementById('parameter-pills-container');
 const mainSearchIcon = document.getElementById('main-search-icon');
-const pillIcon = document.getElementById('pill-icon');
-const pillText = document.getElementById('pill-text');
 const breadcrumbsContainer = document.getElementById('breadcrumbs-container');
 const bcRoot = document.getElementById('bc-root');
 const bcCurrent = document.getElementById('bc-current');
@@ -29,6 +30,10 @@ const editShortcut = document.getElementById('edit-shortcut');
 const saveMacroBtn = document.getElementById('save-macro-btn');
 const editMacroStepsBtn = document.getElementById('edit-macro-steps-btn');
 const deleteMacroBtn = document.getElementById('delete-macro-btn');
+const chainItemModal = document.getElementById('chain-item-modal');
+const closeChainItemBtn = document.getElementById('close-chain-item-btn');
+const chainItemDetails = document.getElementById('chain-item-details');
+const deleteChainItemBtn = document.getElementById('delete-chain-item-btn');
 
 // Initialize Lucide Icons
 lucide.createIcons();
@@ -58,6 +63,8 @@ editMacroStepsBtn.addEventListener('click', () => {
 deleteMacroBtn.addEventListener('click', () => {
     if (commandBeingEdited) deleteMacro(commandBeingEdited.id);
 });
+closeChainItemBtn.addEventListener('click', closeChainItemModal);
+deleteChainItemBtn.addEventListener('click', deleteChainItem);
 
 function handleSearch(e) {
     const query = e.target.value.toLowerCase();
@@ -122,7 +129,14 @@ function handleKeyDown(e) {
         }
     } else if (e.key === 'Backspace' && searchInput.value === '') {
         if (parameterMode) {
-            exitParameterMode();
+            if (currentParameterIndex > 0) {
+                currentParameterIndex--;
+                const lastVal = collectedParameters.pop();
+                updateParameterUI();
+                searchInput.value = lastVal;
+            } else {
+                exitParameterMode();
+            }
         } else if (currentSubcommandParent) {
             goBackToRoot();
         }
@@ -132,14 +146,25 @@ function handleKeyDown(e) {
 function executeSelected() {
     if (parameterMode) {
         const paramValue = searchInput.value.trim();
-        if (chainModeEnabled) {
-            addToChain(`${parameterMode.title}: ${paramValue}`, parameterMode.icon);
-            exitParameterMode();
-            searchInput.value = '';
-            handleSearch({ target: searchInput });
-        } else {
-            console.log(`Executed: ${parameterMode.title} with param: ${paramValue}`);
-            // Close launcher in real usage
+        if (paramValue) {
+            collectedParameters.push(paramValue);
+            
+            if (currentParameterIndex < parameterMode.parameters.length - 1) {
+                currentParameterIndex++;
+                updateParameterUI();
+                return;
+            }
+            
+            if (chainModeEnabled) {
+                addToChain(parameterMode, [...collectedParameters]);
+                exitParameterMode();
+                searchInput.value = '';
+                handleSearch({ target: searchInput });
+            } else {
+                console.log(`Executed: ${parameterMode.title} with params:`, collectedParameters);
+                // Close launcher in real usage
+            }
+            return;
         }
         return;
     }
@@ -149,11 +174,11 @@ function executeSelected() {
 
     if (cmd.hasSubcommands) {
         enterSubcommands(cmd);
-    } else if (cmd.requiresParameter) {
+    } else if (cmd.parameters && cmd.parameters.length > 0) {
         enterParameterMode(cmd);
     } else {
         if (chainModeEnabled) {
-            addToChain(cmd.title, cmd.icon);
+            addToChain(cmd);
             searchInput.value = '';
             handleSearch({ target: searchInput });
         } else {
@@ -190,24 +215,46 @@ function goBackToRoot() {
 
 function enterParameterMode(cmd) {
     parameterMode = cmd;
+    currentParameterIndex = 0;
+    collectedParameters = [];
+    
+    updateParameterUI();
+}
+
+function updateParameterUI() {
+    const currentParam = parameterMode.parameters[currentParameterIndex];
     searchInput.value = '';
-    searchInput.placeholder = cmd.placeholder || "Enter value...";
+    searchInput.placeholder = currentParam.placeholder || "Enter value...";
     
-    // Show pill
-    parameterPill.classList.remove('hidden');
     mainSearchIcon.classList.add('hidden');
+    parameterPillsContainer.classList.remove('hidden');
     
-    pillText.textContent = cmd.title;
-    pillIcon.setAttribute('data-lucide', cmd.icon);
+    let pillsHTML = `
+        <div class="parameter-pill">
+            <span class="pill-icon-container">
+                <i data-lucide="${parameterMode.icon}" class="pill-icon"></i>
+            </span>
+            <span id="pill-text">${parameterMode.title}</span>
+        </div>
+    `;
+    
+    for (let val of collectedParameters) {
+        pillsHTML += `<div class="parameter-value-pill">${val}</div>`;
+    }
+    
+    parameterPillsContainer.innerHTML = pillsHTML;
     lucide.createIcons();
 }
 
 function exitParameterMode() {
     parameterMode = null;
+    currentParameterIndex = 0;
+    collectedParameters = [];
     searchInput.value = '';
     searchInput.placeholder = "Search websites, browser features, settings, and more";
     
-    parameterPill.classList.add('hidden');
+    parameterPillsContainer.classList.add('hidden');
+    parameterPillsContainer.innerHTML = '';
     mainSearchIcon.classList.remove('hidden');
     
     handleSearch({ target: searchInput });
@@ -289,8 +336,13 @@ function saveChainAsMacro() {
     searchInput.focus();
 }
 
-function addToChain(title, iconName) {
-    currentChain.push({ title, icon: iconName });
+function addToChain(cmd, params = []) {
+    currentChain.push({ 
+        id: cmd.id || 'unknown', 
+        title: cmd.title, 
+        icon: cmd.icon, 
+        params: params 
+    });
     updateChainUI();
 }
 
@@ -329,6 +381,7 @@ function updateChainUI() {
                 <i data-lucide="${item.icon}"></i>
                 <span>${item.title}</span>
             `;
+            block.onclick = () => openChainItemModal(index);
             chainTrack.appendChild(block);
             
             if (index < currentChain.length - 1) {
@@ -351,6 +404,74 @@ function groupCommands(commands) {
         acc[cat].push(cmd);
         return acc;
     }, {});
+}
+
+function findCommandById(id) {
+    for (let cmd of commandsData) {
+        if (cmd.id === id) return cmd;
+        if (cmd.subcommands) {
+            const sub = cmd.subcommands.find(c => c.id === id);
+            if (sub) return sub;
+        }
+    }
+    return null;
+}
+
+function openChainItemModal(index) {
+    const item = currentChain[index];
+    if (!item) return;
+
+    chainItemBeingEditedIndex = index;
+    const cmd = findCommandById(item.id);
+
+    let detailsHTML = `
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+            <div class="item-icon">
+                <i data-lucide="${item.icon}"></i>
+            </div>
+            <span style="font-size: 16px; font-weight: 600; color: var(--text-primary);">${item.title}</span>
+        </div>
+    `;
+
+    if (item.params && item.params.length > 0) {
+        item.params.forEach((paramValue, i) => {
+            let label = `Parameter ${i + 1}`;
+            if (cmd && cmd.parameters && cmd.parameters[i]) {
+                label = cmd.parameters[i].placeholder || label;
+                if (label.endsWith('...')) label = label.slice(0, -3);
+            }
+            
+            detailsHTML += `
+                <div class="chain-detail-row">
+                    <span class="chain-detail-label">${label}</span>
+                    <span class="chain-detail-value">${paramValue}</span>
+                </div>
+            `;
+        });
+    } else {
+        detailsHTML += `<div style="color: var(--text-tertiary); font-size: 13px;">This action has no parameters.</div>`;
+    }
+
+    chainItemDetails.innerHTML = detailsHTML;
+    lucide.createIcons();
+    
+    chainItemModal.classList.remove('hidden');
+    isModalOpen = true;
+}
+
+function closeChainItemModal() {
+    chainItemModal.classList.add('hidden');
+    isModalOpen = false;
+    chainItemBeingEditedIndex = -1;
+    searchInput.focus();
+}
+
+function deleteChainItem() {
+    if (chainItemBeingEditedIndex > -1) {
+        currentChain.splice(chainItemBeingEditedIndex, 1);
+        updateChainUI();
+        closeChainItemModal();
+    }
 }
 
 function renderList() {
@@ -411,7 +532,7 @@ function createSuggestionElement(cmd, index) {
         </div>
         <div class="item-content">
             <span class="item-title">${cmd.title}</span>
-            ${cmd.aliases && cmd.aliases.length > 0 ? `<span class="item-subtitle">${cmd.aliases.join(', ')}</span>` : ''}
+            ${cmd.description ? `<span class="item-subtitle">${cmd.description}</span>` : ''}
         </div>
         <div class="item-right">
             ${shortcutHTML}

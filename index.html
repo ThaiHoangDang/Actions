@@ -29,11 +29,8 @@
             <!-- Top input area -->
             <div id="input-area">
                 <i data-lucide="search" class="search-icon" id="main-search-icon"></i>
-                <div id="parameter-pill" class="hidden">
-                    <span class="pill-icon-container">
-                        <i id="pill-icon" data-lucide="box" class="pill-icon"></i>
-                    </span>
-                    <span id="pill-text">Command</span>
+                <div id="parameter-pills-container" class="hidden">
+                    <!-- parameter pills injected here -->
                 </div>
                 <input type="text" id="search-input" placeholder="Search websites, browser features, settings, and more" autocomplete="off" spellcheck="false" />
                 <button id="mic-btn" class="icon-btn" title="Voice Input">
@@ -65,12 +62,12 @@
                           <input type="checkbox" id="chain-mode-toggle">
                           <span class="slider round"></span>
                         </label>
-                        <span>Chain mode</span>
+                        <span>Chuỗi lệnh</span>
                     </div>
                 </div>
                 <div class="footer-right">
-                    <span class="hint"><kbd>Ctrl</kbd> <kbd>E</kbd> to edit</span>
-                    <span class="hint">↵ to submit</span>
+                    <span class="hint"><kbd>Ctrl</kbd> <kbd>E</kbd> để chỉnh sửa</span>
+                    <span class="hint"><kbd>↵ Enter</kbd> để thực thi</span>
                 </div>
             </div>
         </div>
@@ -103,6 +100,22 @@
                     <button id="delete-macro-btn" class="danger-btn hidden">Delete</button>
                 </div>
                 <button id="save-command-btn" class="primary-btn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chain Item Modal -->
+    <div id="chain-item-modal" class="hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Action Details</h3>
+                <button id="close-chain-item-btn" class="icon-btn"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body" id="chain-item-details">
+                <!-- details injected here -->
+            </div>
+            <div class="modal-footer" style="justify-content: flex-end;">
+                <button id="delete-chain-item-btn" class="danger-btn">Delete from Chain</button>
             </div>
         </div>
     </div>
