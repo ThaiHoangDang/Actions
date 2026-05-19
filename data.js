@@ -4,10 +4,20 @@ const commandsData = [
         title: 'Web Search',
         description: 'Tìm kiếm web hoặc url',
         category: 'Browser',
-        aliases: ['google', 'search', 'query'],
+        aliases: ['google', 'search', 'query', "tìm kiếm"],
         shortcut: '',
         icon: 'search',
         parameters: [{ id: 'query', placeholder: 'Search the web...' }],
+        type: 'Command'
+    },
+    {
+        id: 'reorder-tab',
+        title: 'Reorder Tab',
+        description: 'Sắp xếp lại tab',
+        category: 'Browser',
+        aliases: [],
+        shortcut: '',
+        icon: 'arrow-left-right',
         type: 'Command'
     },
     {
@@ -84,29 +94,36 @@ const commandsData = [
         type: 'Application'
     },
     {
-        id: 'gmail',
-        title: 'Gmail Compose',
-        description: 'Soạn email mới trong Gmail',
+        id: 'outlook',
+        title: 'Outlook',
+        description: 'Các tính năng với Outlook',
         category: 'Apps',
         aliases: ['email', 'mail', 'send'],
         shortcut: '',
         icon: 'mail',
-        parameters: [
-            { id: 'to', placeholder: 'To...' },
-            { id: 'subject', placeholder: 'Subject...' },
-            { id: 'body', placeholder: 'Message...' }
+        hasSubcommands: true,
+        subcommands: [
+            { id: 'outlook-compose', title: 'Outlook Compose', description: 'Soạn email mới trong Outlook', icon: 'mail', parameters: [{ id: 'to', placeholder: 'To...' }, { id: 'subject', placeholder: 'Subject...' }, { id: 'body', placeholder: 'Message...' }] },
+            { id: 'outlook-calendar', title: 'Outlook Calendar', description: 'Xem lịch làm việc của bạn', icon: 'calendar' },
+            { id: 'outlook-contacts', title: 'Outlook Contacts', description: 'Danh sách liên hệ Outlook của bạn', icon: 'users' },
+            { id: 'outlook-tasks', title: 'Outlook Tasks', description: 'Danh sách công việc Outlook của bạn', icon: 'clipboard-list' }
         ],
         type: 'Application'
     },
     {
         id: 'shopee',
-        title: 'Shopee Search',
-        description: 'Tìm kiếm sản phẩm trên Shopee',
+        title: 'Shopee',
+        description: 'Các tính năng với Shopee',
         category: 'Apps',
         aliases: ['shop', 'buy'],
         shortcut: '',
         icon: 'shopping-bag',
-        parameters: [{ id: 'query', placeholder: 'Search Shopee...' }],
+        hasSubcommands: true,
+        subcommands: [
+            { id: 'shopee-search', title: 'Shopee Search', description: 'Tìm kiếm sản phẩm trên Shopee', icon: 'search', parameters: [{ id: 'query', placeholder: 'Search Shopee...' }] },
+            { id: 'shopee-trending', title: 'Shopee Trending', description: 'Xem các sản phẩm thịnh hành', icon: 'trending-up' },
+            { id: 'shopee-profile', title: 'My Profile', description: 'Xem hồ sơ của bạn', icon: 'user' }
+        ],
         type: 'Application'
     },
     {

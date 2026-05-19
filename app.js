@@ -425,7 +425,7 @@ function openChainItemModal(index) {
     const cmd = findCommandById(item.id);
 
     let detailsHTML = `
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+        <div style="display: flex; align-items: center; margin-bottom: 8px;">
             <div class="item-icon">
                 <i data-lucide="${item.icon}"></i>
             </div>
