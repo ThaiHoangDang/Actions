@@ -398,13 +398,6 @@ function createSuggestionElement(cmd, index) {
         selectedIndex = index;
         executeSelected();
     };
-    
-    el.onmouseenter = () => {
-        if (selectedIndex !== index) {
-            selectedIndex = index;
-            updateSelection();
-        }
-    };
 
     let shortcutHTML = '';
     if (cmd.shortcut) {
@@ -441,8 +434,20 @@ function updateSelection() {
 }
 
 function scrollToSelection() {
+    const container = document.getElementById('suggestion-list-container');
     const selected = document.querySelector('.suggestion-item.selected');
-    if (selected) {
-        selected.scrollIntoView({ block: 'nearest' });
+    
+    if (container && selected) {
+        const containerRect = container.getBoundingClientRect();
+        const selectedRect = selected.getBoundingClientRect();
+        
+        // Number of pixels to maintain as a buffer (e.g., height of ~2 items)
+        const buffer = selectedRect.height * 2;
+        
+        if (selectedRect.bottom + buffer > containerRect.bottom) {
+            container.scrollTop += (selectedRect.bottom + buffer) - containerRect.bottom;
+        } else if (selectedRect.top - buffer < containerRect.top) {
+            container.scrollTop -= containerRect.top - (selectedRect.top - buffer);
+        }
     }
 }
