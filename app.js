@@ -378,7 +378,6 @@ function updateChainUI() {
             const block = document.createElement('div');
             block.className = 'chain-block';
             block.innerHTML = `
-                <i data-lucide="${item.icon}"></i>
                 <span>${item.title}</span>
             `;
             block.onclick = () => openChainItemModal(index);
