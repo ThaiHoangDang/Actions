@@ -44,7 +44,21 @@ searchInput.focus();
 
 // Event Listeners
 searchInput.addEventListener('input', handleSearch);
-searchInput.addEventListener('keydown', handleKeyDown);
+document.addEventListener('keydown', handleKeyDown);
+
+// Keep search input focused when clicking non-interactive areas
+document.addEventListener('click', (e) => {
+    if (!isModalOpen && e.target.tagName !== 'INPUT' && !e.target.closest('.icon-btn') && !e.target.closest('.switch') && !e.target.closest('.suggestion-item')) {
+        searchInput.focus();
+    }
+});
+
+// Auto-focus search input if the user starts typing letters outside the input
+document.addEventListener('keydown', (e) => {
+    if (!isModalOpen && document.activeElement !== searchInput && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        searchInput.focus();
+    }
+});
 chainToggle.addEventListener('change', (e) => {
     chainModeEnabled = e.target.checked;
     if (!chainModeEnabled) {
