@@ -1,5 +1,39 @@
-"use strict";
-const commandsData = [
+interface CommandParameter {
+    id: string;
+    placeholder: string;
+}
+
+interface Subcommand {
+    id: string;
+    title: string;
+    description: string;
+    icon: string;
+    parameters?: CommandParameter[];
+    aliases?: string[];
+}
+
+interface Step {
+    title: string;
+    icon: string;
+}
+
+interface Command {
+    id: string;
+    title: string;
+    description?: string;
+    category?: string;
+    aliases?: string[];
+    shortcut?: string;
+    icon: string;
+    type?: string;
+    parameters?: CommandParameter[];
+    hasSubcommands?: boolean;
+    subcommands?: Subcommand[];
+    isMacro?: boolean;
+    steps?: Step[];
+}
+
+const commandsData: Command[] = [
     {
         id: 'web-search',
         title: 'Web Search',

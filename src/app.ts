@@ -1,62 +1,69 @@
-"use strict";
-let currentCommands = [...commandsData];
+declare const lucide: any;
+
+let currentCommands: Command[] = [...commandsData];
 let selectedIndex = 0;
 let chainModeEnabled = false;
-let currentChain = [];
-let currentSubcommandParent = null; // null if at root
-let parameterMode = null; // null or reference to command object requiring parameter
+let currentChain: any[] = [];
+let currentSubcommandParent: Command | null = null; // null if at root
+let parameterMode: Command | null = null; // null or reference to command object requiring parameter
 let currentParameterIndex = 0;
-let collectedParameters = [];
+let collectedParameters: string[] = [];
 let isModalOpen = false;
-let commandBeingEdited = null;
+let commandBeingEdited: Command | null = null;
 let chainItemBeingEditedIndex = -1;
+
 // DOM Elements
-const searchInput = document.getElementById('search-input');
-const suggestionList = document.getElementById('suggestion-list');
-const chainToggle = document.getElementById('chain-mode-toggle');
-const chainHeader = document.getElementById('chain-header');
-const chainTrack = document.getElementById('chain-track');
-const parameterPillsContainer = document.getElementById('parameter-pills-container');
-const mainSearchIcon = document.getElementById('main-search-icon');
-const breadcrumbsContainer = document.getElementById('breadcrumbs-container');
-const bcRoot = document.getElementById('bc-root');
-const bcCurrent = document.getElementById('bc-current');
-const settingsModal = document.getElementById('settings-modal');
-const closeModalBtn = document.getElementById('close-modal-btn');
-const saveCommandBtn = document.getElementById('save-command-btn');
-const editTitle = document.getElementById('edit-title');
-const editAliases = document.getElementById('edit-aliases');
-const editShortcut = document.getElementById('edit-shortcut');
-const saveMacroBtn = document.getElementById('save-macro-btn');
-const editMacroStepsBtn = document.getElementById('edit-macro-steps-btn');
-const deleteMacroBtn = document.getElementById('delete-macro-btn');
-const chainItemModal = document.getElementById('chain-item-modal');
-const closeChainItemBtn = document.getElementById('close-chain-item-btn');
-const chainItemDetails = document.getElementById('chain-item-details');
-const deleteChainItemBtn = document.getElementById('delete-chain-item-btn');
+const searchInput = document.getElementById('search-input') as HTMLInputElement;
+const suggestionList = document.getElementById('suggestion-list') as HTMLDivElement;
+const chainToggle = document.getElementById('chain-mode-toggle') as HTMLInputElement;
+const chainHeader = document.getElementById('chain-header') as HTMLDivElement;
+const chainTrack = document.getElementById('chain-track') as HTMLDivElement;
+const parameterPillsContainer = document.getElementById('parameter-pills-container') as HTMLDivElement;
+const mainSearchIcon = document.getElementById('main-search-icon') as HTMLElement;
+const breadcrumbsContainer = document.getElementById('breadcrumbs-container') as HTMLDivElement;
+const bcRoot = document.getElementById('bc-root') as HTMLSpanElement;
+const bcCurrent = document.getElementById('bc-current') as HTMLSpanElement;
+const settingsModal = document.getElementById('settings-modal') as HTMLDivElement;
+const closeModalBtn = document.getElementById('close-modal-btn') as HTMLButtonElement;
+const saveCommandBtn = document.getElementById('save-command-btn') as HTMLButtonElement;
+const editTitle = document.getElementById('edit-title') as HTMLInputElement;
+const editAliases = document.getElementById('edit-aliases') as HTMLInputElement;
+const editShortcut = document.getElementById('edit-shortcut') as HTMLInputElement;
+const saveMacroBtn = document.getElementById('save-macro-btn') as HTMLButtonElement;
+const editMacroStepsBtn = document.getElementById('edit-macro-steps-btn') as HTMLButtonElement;
+const deleteMacroBtn = document.getElementById('delete-macro-btn') as HTMLButtonElement;
+const chainItemModal = document.getElementById('chain-item-modal') as HTMLDivElement;
+const closeChainItemBtn = document.getElementById('close-chain-item-btn') as HTMLButtonElement;
+const chainItemDetails = document.getElementById('chain-item-details') as HTMLDivElement;
+const deleteChainItemBtn = document.getElementById('delete-chain-item-btn') as HTMLButtonElement;
+
 // Initialize Lucide Icons
 lucide.createIcons();
+
 // Initial Render
 renderList();
 searchInput.focus();
+
 // Event Listeners
 searchInput.addEventListener('input', handleSearch);
 document.addEventListener('keydown', handleKeyDown);
+
 // Keep search input focused when clicking non-interactive areas
-document.addEventListener('click', (e) => {
-    const target = e.target;
+document.addEventListener('click', (e: MouseEvent) => {
+    const target = e.target as HTMLElement;
     if (!isModalOpen && target.tagName !== 'INPUT' && !target.closest('.icon-btn') && !target.closest('.switch') && !target.closest('.suggestion-item')) {
         searchInput.focus();
     }
 });
+
 // Auto-focus search input if the user starts typing letters outside the input
-document.addEventListener('keydown', (e) => {
+document.addEventListener('keydown', (e: KeyboardEvent) => {
     if (!isModalOpen && document.activeElement !== searchInput && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
         searchInput.focus();
     }
 });
-chainToggle.addEventListener('change', (e) => {
-    chainModeEnabled = e.target.checked;
+chainToggle.addEventListener('change', (e: Event) => {
+    chainModeEnabled = (e.target as HTMLInputElement).checked;
     if (!chainModeEnabled) {
         currentChain = [];
         updateChainUI();
@@ -68,112 +75,110 @@ closeModalBtn.addEventListener('click', closeSettingsModal);
 saveCommandBtn.addEventListener('click', saveCommandSettings);
 saveMacroBtn.addEventListener('click', saveChainAsMacro);
 editMacroStepsBtn.addEventListener('click', () => {
-    if (commandBeingEdited)
-        editMacro(commandBeingEdited.id);
+    if (commandBeingEdited) editMacro(commandBeingEdited.id);
 });
 deleteMacroBtn.addEventListener('click', () => {
-    if (commandBeingEdited)
-        deleteMacro(commandBeingEdited.id);
+    if (commandBeingEdited) deleteMacro(commandBeingEdited.id);
 });
 closeChainItemBtn.addEventListener('click', closeChainItemModal);
 deleteChainItemBtn.addEventListener('click', deleteChainItem);
-function handleSearch(e) {
-    const target = e.target;
+
+function handleSearch(e: Event) {
+    const target = e.target as HTMLInputElement;
     const query = target.value.toLowerCase();
+    
     // If in parameter mode, we just collect input, no need to filter commands
     if (parameterMode) {
         return;
     }
+
     let listToFilter = (currentSubcommandParent ? currentSubcommandParent.subcommands : commandsData) || [];
+    
     if (!query) {
-        currentCommands = [...listToFilter];
-    }
-    else {
-        currentCommands = listToFilter.filter((cmd) => {
+        currentCommands = [...listToFilter] as Command[];
+    } else {
+        currentCommands = listToFilter.filter((cmd: any) => {
             const titleMatch = cmd.title.toLowerCase().includes(query);
-            const aliasMatch = cmd.aliases ? cmd.aliases.some((a) => a.toLowerCase().includes(query)) : false;
+            const aliasMatch = cmd.aliases ? cmd.aliases.some((a: string) => a.toLowerCase().includes(query)) : false;
             return titleMatch || aliasMatch;
         });
     }
+    
     selectedIndex = 0;
     renderList();
 }
-function handleKeyDown(e) {
+
+function handleKeyDown(e: KeyboardEvent) {
     if (isModalOpen) {
         if (e.key === 'Escape') {
             closeSettingsModal();
-        }
-        else if (e.key === 'Enter') {
+        } else if (e.key === 'Enter') {
             saveCommandSettings();
         }
         return;
     }
+    
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'e') {
         e.preventDefault();
         openSettingsModal();
         return;
     }
+
     if (e.key === 'ArrowDown') {
         e.preventDefault();
         selectedIndex = Math.min(selectedIndex + 1, currentCommands.length - 1);
         updateSelection();
-    }
-    else if (e.key === 'ArrowUp') {
+    } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         selectedIndex = Math.max(selectedIndex - 1, 0);
         updateSelection();
-    }
-    else if (e.key === 'Enter') {
+    } else if (e.key === 'Enter') {
         e.preventDefault();
         executeSelected();
-    }
-    else if (e.key === 'Escape') {
+    } else if (e.key === 'Escape') {
         e.preventDefault();
         if (parameterMode) {
             exitParameterMode();
-        }
-        else if (currentSubcommandParent) {
+        } else if (currentSubcommandParent) {
             goBackToRoot();
-        }
-        else {
+        } else {
             console.log("Close Launcher");
             // Here you would trigger the mechanism to close the overlay
         }
-    }
-    else if (e.key === 'Backspace' && searchInput.value === '') {
+    } else if (e.key === 'Backspace' && searchInput.value === '') {
         if (parameterMode) {
             if (currentParameterIndex > 0) {
                 currentParameterIndex--;
                 const lastVal = collectedParameters.pop() || '';
                 updateParameterUI();
                 searchInput.value = lastVal;
-            }
-            else {
+            } else {
                 exitParameterMode();
             }
-        }
-        else if (currentSubcommandParent) {
+        } else if (currentSubcommandParent) {
             goBackToRoot();
         }
     }
 }
+
 function executeSelected() {
     if (parameterMode) {
         const paramValue = searchInput.value.trim();
         if (paramValue) {
             collectedParameters.push(paramValue);
+            
             if (parameterMode && parameterMode.parameters && currentParameterIndex < parameterMode.parameters.length - 1) {
                 currentParameterIndex++;
                 updateParameterUI();
                 return;
             }
+            
             if (chainModeEnabled) {
                 addToChain(parameterMode, [...collectedParameters]);
                 exitParameterMode();
                 searchInput.value = '';
-                handleSearch({ target: searchInput });
-            }
-            else {
+                handleSearch({ target: searchInput } as unknown as Event);
+            } else {
                 console.log(`Executed: ${parameterMode.title} with params:`, collectedParameters);
                 // Close launcher in real usage
             }
@@ -181,60 +186,68 @@ function executeSelected() {
         }
         return;
     }
+
     const cmd = currentCommands[selectedIndex];
-    if (!cmd)
-        return;
+    if (!cmd) return;
+
     if (cmd.hasSubcommands) {
         enterSubcommands(cmd);
-    }
-    else if (cmd.parameters && cmd.parameters.length > 0) {
+    } else if (cmd.parameters && cmd.parameters.length > 0) {
         enterParameterMode(cmd);
-    }
-    else {
+    } else {
         if (chainModeEnabled) {
             addToChain(cmd);
             searchInput.value = '';
-            handleSearch({ target: searchInput });
-        }
-        else {
+            handleSearch({ target: searchInput } as unknown as Event);
+        } else {
             console.log(`Executed: ${cmd.title}`);
             // Close launcher in real usage
         }
     }
 }
-function enterSubcommands(cmd) {
+
+function enterSubcommands(cmd: Command) {
     currentSubcommandParent = cmd;
-    currentCommands = [...(cmd.subcommands || [])];
+    currentCommands = [...(cmd.subcommands || [])] as Command[];
     selectedIndex = 0;
     searchInput.value = '';
+    
     // Update UI
     breadcrumbsContainer.classList.remove('hidden');
     bcCurrent.textContent = cmd.title;
+    
     renderList();
 }
+
 function goBackToRoot() {
     currentSubcommandParent = null;
     currentCommands = [...commandsData];
     selectedIndex = 0;
     searchInput.value = '';
+    
     breadcrumbsContainer.classList.add('hidden');
+    
     renderList();
     searchInput.focus();
 }
-function enterParameterMode(cmd) {
+
+function enterParameterMode(cmd: Command) {
     parameterMode = cmd;
     currentParameterIndex = 0;
     collectedParameters = [];
+    
     updateParameterUI();
 }
+
 function updateParameterUI() {
-    if (!parameterMode || !parameterMode.parameters)
-        return;
+    if (!parameterMode || !parameterMode.parameters) return;
     const currentParam = parameterMode.parameters[currentParameterIndex];
     searchInput.value = '';
     searchInput.placeholder = currentParam.placeholder || "Enter value...";
+    
     mainSearchIcon.classList.add('hidden');
     parameterPillsContainer.classList.remove('hidden');
+    
     let pillsHTML = `
         <div class="parameter-pill">
             <span class="pill-icon-container">
@@ -243,67 +256,76 @@ function updateParameterUI() {
             <span id="pill-text">${parameterMode.title}</span>
         </div>
     `;
+    
     for (let val of collectedParameters) {
         pillsHTML += `<div class="parameter-value-pill">${val}</div>`;
     }
+    
     parameterPillsContainer.innerHTML = pillsHTML;
     lucide.createIcons();
 }
+
 function exitParameterMode() {
     parameterMode = null;
     currentParameterIndex = 0;
     collectedParameters = [];
     searchInput.value = '';
     searchInput.placeholder = "Search websites, browser features, settings, and more";
+    
     parameterPillsContainer.classList.add('hidden');
     parameterPillsContainer.innerHTML = '';
     mainSearchIcon.classList.remove('hidden');
-    handleSearch({ target: searchInput });
+    
+    handleSearch({ target: searchInput } as unknown as Event);
 }
+
 function openSettingsModal() {
-    if (parameterMode)
-        return;
+    if (parameterMode) return;
     const cmd = currentCommands[selectedIndex];
-    if (!cmd)
-        return;
+    if (!cmd) return;
+    
     commandBeingEdited = cmd;
     editTitle.value = cmd.title || '';
     editAliases.value = cmd.aliases ? cmd.aliases.join(', ') : '';
     editShortcut.value = cmd.shortcut || '';
+    
     if (cmd.isMacro) {
         editMacroStepsBtn.classList.remove('hidden');
         deleteMacroBtn.classList.remove('hidden');
-    }
-    else {
+    } else {
         editMacroStepsBtn.classList.add('hidden');
         deleteMacroBtn.classList.add('hidden');
     }
+    
     settingsModal.classList.remove('hidden');
     isModalOpen = true;
     editTitle.focus();
 }
+
 function closeSettingsModal() {
     settingsModal.classList.add('hidden');
     isModalOpen = false;
     commandBeingEdited = null;
     searchInput.focus();
 }
+
 function saveCommandSettings() {
-    if (!commandBeingEdited)
-        return;
+    if (!commandBeingEdited) return;
+    
     commandBeingEdited.title = editTitle.value.trim();
     const aliasesRaw = editAliases.value.trim();
     commandBeingEdited.aliases = aliasesRaw ? aliasesRaw.split(',').map(s => s.trim()) : [];
     commandBeingEdited.shortcut = editShortcut.value.trim();
+    
     closeSettingsModal();
     renderList();
 }
+
 function saveChainAsMacro() {
-    if (currentChain.length === 0)
-        return;
+    if (currentChain.length === 0) return;
     const macroName = prompt("Enter a name for this macro:", "New Macro");
-    if (!macroName)
-        return;
+    if (!macroName) return;
+    
     const newMacro = {
         id: 'macro-' + Date.now(),
         title: macroName,
@@ -315,38 +337,44 @@ function saveChainAsMacro() {
         type: 'Macro',
         steps: [...currentChain]
     };
+    
     commandsData.push(newMacro);
+    
     currentChain = [];
     chainToggle.checked = false;
     chainModeEnabled = false;
     updateChainUI();
+    
     if (!currentSubcommandParent && searchInput.value === '') {
         currentCommands = [...commandsData];
         renderList();
+    } else {
+        handleSearch({ target: searchInput } as unknown as Event);
     }
-    else {
-        handleSearch({ target: searchInput });
-    }
+    
     searchInput.focus();
 }
-function addToChain(cmd, params = []) {
-    currentChain.push({
-        id: cmd.id || 'unknown',
-        title: cmd.title,
-        icon: cmd.icon,
-        params: params
+
+function addToChain(cmd: Command, params: string[] = []) {
+    currentChain.push({ 
+        id: cmd.id || 'unknown', 
+        title: cmd.title, 
+        icon: cmd.icon, 
+        params: params 
     });
     updateChainUI();
 }
-function deleteMacro(id) {
+
+function deleteMacro(id: string) {
     const index = commandsData.findIndex(c => c.id === id);
     if (index > -1) {
         commandsData.splice(index, 1);
-        handleSearch({ target: searchInput });
+        handleSearch({ target: searchInput } as unknown as Event);
         closeSettingsModal();
     }
 }
-function editMacro(id) {
+
+function editMacro(id: string) {
     const index = commandsData.findIndex(c => c.id === id);
     if (index > -1) {
         const macro = commandsData[index];
@@ -356,10 +384,11 @@ function editMacro(id) {
         chainToggle.checked = true;
         updateChainUI();
         searchInput.value = '';
-        handleSearch({ target: searchInput });
+        handleSearch({ target: searchInput } as unknown as Event);
         closeSettingsModal();
     }
 }
+
 function updateChainUI() {
     if (currentChain.length > 0) {
         chainHeader.classList.remove('hidden');
@@ -372,6 +401,7 @@ function updateChainUI() {
             `;
             block.onclick = () => openChainItemModal(index);
             chainTrack.appendChild(block);
+            
             if (index < currentChain.length - 1) {
                 const arrow = document.createElement('i');
                 arrow.setAttribute('data-lucide', 'arrow-right');
@@ -380,38 +410,38 @@ function updateChainUI() {
             }
         });
         lucide.createIcons();
-    }
-    else {
+    } else {
         chainHeader.classList.add('hidden');
     }
 }
-function groupCommands(commands) {
-    return commands.reduce((acc, cmd) => {
+
+function groupCommands(commands: Command[]) {
+    return commands.reduce((acc: any, cmd: Command) => {
         const cat = cmd.category || 'General';
-        if (!acc[cat])
-            acc[cat] = [];
+        if (!acc[cat]) acc[cat] = [];
         acc[cat].push(cmd);
         return acc;
     }, {});
 }
-function findCommandById(id) {
+
+function findCommandById(id: string) {
     for (let cmd of commandsData) {
-        if (cmd.id === id)
-            return cmd;
+        if (cmd.id === id) return cmd;
         if (cmd.subcommands) {
             const sub = cmd.subcommands.find(c => c.id === id);
-            if (sub)
-                return sub;
+            if (sub) return sub;
         }
     }
     return null;
 }
-function openChainItemModal(index) {
+
+function openChainItemModal(index: number) {
     const item = currentChain[index];
-    if (!item)
-        return;
+    if (!item) return;
+
     chainItemBeingEditedIndex = index;
     const cmd = findCommandById(item.id);
+
     let detailsHTML = `
         <div style="display: flex; align-items: center; margin-bottom: 8px;">
             <div class="item-icon">
@@ -420,14 +450,15 @@ function openChainItemModal(index) {
             <span style="font-size: 16px; font-weight: 600; color: var(--text-primary);">${item.title}</span>
         </div>
     `;
+
     if (item.params && item.params.length > 0) {
-        item.params.forEach((paramValue, i) => {
+        item.params.forEach((paramValue: string, i: number) => {
             let label = `Parameter ${i + 1}`;
             if (cmd && cmd.parameters && cmd.parameters[i]) {
                 label = cmd.parameters[i].placeholder || label;
-                if (label.endsWith('...'))
-                    label = label.slice(0, -3);
+                if (label.endsWith('...')) label = label.slice(0, -3);
             }
+            
             detailsHTML += `
                 <div class="chain-detail-row">
                     <span class="chain-detail-label">${label}</span>
@@ -435,21 +466,24 @@ function openChainItemModal(index) {
                 </div>
             `;
         });
-    }
-    else {
+    } else {
         detailsHTML += `<div style="color: var(--text-tertiary); font-size: 13px;">This action has no parameters.</div>`;
     }
+
     chainItemDetails.innerHTML = detailsHTML;
     lucide.createIcons();
+    
     chainItemModal.classList.remove('hidden');
     isModalOpen = true;
 }
+
 function closeChainItemModal() {
     chainItemModal.classList.add('hidden');
     isModalOpen = false;
     chainItemBeingEditedIndex = -1;
     searchInput.focus();
 }
+
 function deleteChainItem() {
     if (chainItemBeingEditedIndex > -1) {
         currentChain.splice(chainItemBeingEditedIndex, 1);
@@ -457,50 +491,59 @@ function deleteChainItem() {
         closeChainItemModal();
     }
 }
+
 function renderList() {
     suggestionList.innerHTML = '';
+    
     if (currentCommands.length === 0) {
         suggestionList.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-tertiary);">No results found</div>';
         return;
     }
+
     // Only group if we are at root
     if (!currentSubcommandParent) {
         const grouped = groupCommands(currentCommands);
         let globalIndex = 0;
+
         for (const [category, cmds] of Object.entries(grouped)) {
             const catLabel = document.createElement('div');
             catLabel.className = 'category-label';
             catLabel.textContent = category;
             suggestionList.appendChild(catLabel);
-            cmds.forEach((cmd) => {
+
+            (cmds as Command[]).forEach((cmd: Command) => {
                 const el = createSuggestionElement(cmd, globalIndex);
                 suggestionList.appendChild(el);
                 globalIndex++;
             });
         }
-    }
-    else {
+    } else {
         currentCommands.forEach((cmd, index) => {
             const el = createSuggestionElement(cmd, index);
             suggestionList.appendChild(el);
         });
     }
+
     lucide.createIcons();
     scrollToSelection();
 }
-function createSuggestionElement(cmd, index) {
+
+function createSuggestionElement(cmd: Command, index: number) {
     const el = document.createElement('div');
     el.className = `suggestion-item ${index === selectedIndex ? 'selected' : ''}`;
     el.setAttribute('data-index', index.toString());
+    
     el.onclick = () => {
         selectedIndex = index;
         executeSelected();
     };
+
     let shortcutHTML = '';
     if (cmd.shortcut) {
         const keys = cmd.shortcut.split(' ').map(k => `<kbd>${k}</kbd>`).join('');
         shortcutHTML = `<div class="shortcut">${keys}</div>`;
     }
+
     el.innerHTML = `
         <div class="item-icon ${cmd.isMacro ? 'macro' : ''}">
             <i data-lucide="${cmd.icon}"></i>
@@ -516,30 +559,33 @@ function createSuggestionElement(cmd, index) {
     `;
     return el;
 }
+
 function updateSelection() {
     const items = document.querySelectorAll('.suggestion-item');
     items.forEach(item => {
         if (parseInt(item.getAttribute('data-index') || '-1') === selectedIndex) {
             item.classList.add('selected');
-        }
-        else {
+        } else {
             item.classList.remove('selected');
         }
     });
     scrollToSelection();
 }
+
 function scrollToSelection() {
     const container = document.getElementById('suggestion-list-container');
     const selected = document.querySelector('.suggestion-item.selected');
+    
     if (container && selected) {
         const containerRect = container.getBoundingClientRect();
         const selectedRect = selected.getBoundingClientRect();
+        
         // Number of pixels to maintain as a buffer (e.g., height of ~2 items)
         const buffer = selectedRect.height * 2;
+        
         if (selectedRect.bottom + buffer > containerRect.bottom) {
             container.scrollTop += (selectedRect.bottom + buffer) - containerRect.bottom;
-        }
-        else if (selectedRect.top - buffer < containerRect.top) {
+        } else if (selectedRect.top - buffer < containerRect.top) {
             container.scrollTop -= containerRect.top - (selectedRect.top - buffer);
         }
     }
